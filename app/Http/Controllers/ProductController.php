@@ -8,6 +8,7 @@ use Illuminate\Http\Response;
 use App\Http\Resources\ProductResource;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\ProductCreateRequest;
+use App\Http\Requests\ProductUpdateRequest;
 
 class ProductController extends Controller
 {
@@ -26,17 +27,7 @@ class ProductController extends Controller
      */
     public function store(ProductCreateRequest $request)
     {
-        $file = $request->file('image');
-        $name = Str::random(10) . '.' . $file->extension();
-
-        Storage::putFileAs('images', $file, $name);
-
-        $product = Product::create([
-            'title' => $request->input('title'),
-            'description' => $request->input('description'),
-            'price' => $request->input('price'),
-            'image' => $name
-        ]);
+        $product = Product::create($request->only('title', 'description', 'price', 'image'));
         
         return response(new ProductResource($product), Response::HTTP_CREATED);
     }
@@ -64,9 +55,8 @@ class ProductController extends Controller
     public function update(ProductUpdateRequest $request, $id)
     {
         $product = Product::find($id);
-
-        $product->update($request->only('name'));
-
+        $product = Product::create($request->only('title', 'description', 'price', 'image'));
+        
         return response(new ProductResource($product), Response::HTTP_ACCEPTED);
     }
 
