@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\RoleCreateRequest;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use App\Http\Resources\RoleResource;
+use App\Http\Requests\RoleCreateRequest;
+use App\Models\RolePermission;
 
 class RolesController extends Controller
 {
@@ -16,7 +18,7 @@ class RolesController extends Controller
      */
     public function index()
     {
-        return Role::all();
+        return RoleResource::collection(Role::all());
     }
 
     /**
@@ -28,8 +30,17 @@ class RolesController extends Controller
     public function store(RoleCreateRequest $request)
     {
         $role = Role::create($request->only('name'));
+
+        if ($permissions = $request->input('permissions')) {
+            foreach ($permissions as $permission_id) {
+                RolePermission::insert([
+                    'role_id' => $role->id,
+                    'permission_id' => $permission_id
+                ]);
+            }
+        }
         
-        return response($role, Response::HTTP_CREATED);
+        return response(new RoleResource($role), Response::HTTP_CREATED);
     }
 
     /**
@@ -40,7 +51,7 @@ class RolesController extends Controller
      */
     public function show($id)
     {
-        return Role::find($id);
+        return new RoleResource(Role::find($id));
     }
 
     /**
@@ -56,7 +67,18 @@ class RolesController extends Controller
 
         $role->update($request->only('name'));
 
-        return response($role, Response::HTTP_ACCEPTED);
+        RolePermission::where('role_id', $role->id)->delete();
+
+        if ($permissions = $request->input('permissions')) {
+            foreach ($permissions as $permission_id) {
+                RolePermission::insert([
+                    'role_id' => $role->id,
+                    'permission_id' => $permission_id
+                ]);
+            }
+        }
+
+        return response(new RoleResource($role), Response::HTTP_ACCEPTED);
     }
 
     /**
@@ -67,6 +89,7 @@ class RolesController extends Controller
      */
     public function destroy($id)
     {
+        RolePermission::where('role_id', $id)->delete();
         Role::destroy($id);
     
         return response(null, Response::HTTP_NO_CONTENT);
