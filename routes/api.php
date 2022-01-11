@@ -6,9 +6,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\OrderController;
-use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PermissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,7 +27,9 @@ Route::post('login', [AuthController::class, 'login'])->name('login');
 Route::post('register', [AuthController::class, 'register'])->name('register');
 
 Route::group(['middleware' => 'auth:api'], function() {
+    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('user', [UserController::class, 'user']);
+    Route::get('chart', [DashboardController::class, 'chart']);
     Route::put('users/info', [UserController::class, 'updateInfo']);
     Route::put('users/password', [UserController::class, 'updatePassword']);
     Route::post('upload_image', [ImageController::class, 'upload']);
